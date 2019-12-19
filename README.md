@@ -8,7 +8,10 @@
 ### 效果
 
  一些实际测试显示text cnn一般效果不错~
-
+### 示例
+ 参考example中的train_cnn.py文件
+### 添加新的数据和格式需求
+ 修改data/data_reader_new.py(有空修改下扩展性）
 
 
 #### trick
