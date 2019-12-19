@@ -12,6 +12,17 @@
  参考example中的train_cnn.py文件
 ### 添加新的数据和格式需求
  修改data/data_reader_new.py(有空修改下扩展性）
+### 结构
+ ML-传统特征表示和机器学习方法
+ data- data_reader 
+ dataset-数据
+ dict-存放一些字典数据
+ examples-示例
+ libraries-bert模型
+ model-模型
+ nn-基本组件层
+ train-trainer
+ utils-一些其他工具：导出模型、查询阈值等等，有点杂乱，待整理～
 
 
 #### trick
