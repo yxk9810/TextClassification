@@ -25,7 +25,7 @@ import math
 import re
 import six
 import tensorflow as tf
-from libraries_albert.gpu_environment import get_custom_getter
+# from libraries import get_custom_getter
 
 class BertConfig(object):
   """Configuration for `BertModel`."""
@@ -171,7 +171,7 @@ class BertModel(object):
     if token_type_ids is None:
       token_type_ids = tf.zeros(shape=[batch_size, seq_length], dtype=tf.int32)
 
-    with tf.variable_scope(scope, default_name="bert",custom_getter=get_custom_getter(compute_type)):
+    with tf.variable_scope(scope, default_name="bert"):
       with tf.variable_scope("embeddings"):
         # Perform embedding lookup on the word ids.
         (self.embedding_output, self.embedding_table) = embedding_lookup(

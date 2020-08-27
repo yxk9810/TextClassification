@@ -7,7 +7,7 @@ import logging
 import numpy as np
 import os
 from collections import OrderedDict, defaultdict
-from train.du_trainer import Trainer
+from du_train.du_trainer import Trainer
 
 class BaseModel(object):
     def __init__(self, vocab=None,use_xla=False):

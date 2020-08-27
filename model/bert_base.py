@@ -6,9 +6,9 @@ import logging
 from collections import OrderedDict, defaultdict
 from model.base import BaseModel
 from nn.layer import  BertEmbedding,Dropout
-from libraries_albert import modeling_bak
-from libraries_albert import optimization_finetuning as optimization
-from train.du_trainer import Trainer
+from libraries import modeling
+from libraries import   optimization
+from du_train.du_trainer import Trainer
 
 
 

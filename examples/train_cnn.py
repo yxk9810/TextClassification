@@ -1,7 +1,9 @@
 #coding:utf-8
 import tensorflow as tf
 import logging
-from ..data.data_reader_new import DatasetReader
+import sys
+sys.path.append('/home/wujindou/classification_toolkit/')
+from data.data_reader_new import DatasetReader
 from tensorflow import set_random_seed
 set_random_seed(12345)
 if __name__ == '__main__':
@@ -9,10 +11,10 @@ if __name__ == '__main__':
     logger = logging.getLogger("brc")
     logger.setLevel(logging.INFO)
 
-    brc_data = DatasetReader(train_file='',
-                             dev_file='',
-                             test_file='',
-                             use_pos_feature=True,
+    brc_data = DatasetReader(train_file='/home/wujindou/dataset/train_product_category.csv',
+                             dev_file='/home/wujindou/dataset/dev_product_category.csv',
+                             test_file='/home/wujindou/dataset/test_product_category.csv',
+                             use_pos_feature=False,
                              use_bert=False
                              )
     from data.vocab import Vocab
@@ -43,14 +45,15 @@ if __name__ == '__main__':
 
 
     import os
-    # vocab.load_from_file('vocab_bool.txt')
-    vocab.load_pretrained_embeddings('sgns.merge.word2vec')
+    vocab_file = 'product_category_vocab.txt'# vocab.load_from_file('vocab_bool.txt')
+    if os.path.exists(vocab_file): vocab.load_from_file(vocab_file)
+    #vocab.load_pretrained_embeddings('/home/wujindou/sgns.merge.word')
 
-    # if not os.path.exists('vocab_bool.txt'):
-    #     writer = open('vocab_bool.txt', 'a+', encoding='utf-8')
-    #     for word, id in vocab.token2id.items():
-    #         writer.write(word + '\t' + str(id) + '\n')
-    #     writer.close()
+    if not os.path.exists(vocab_file):
+         writer = open(vocab_file, 'a+', encoding='utf-8')
+         for word, id in vocab.token2id.items():
+             writer.write(word + '\t' + str(id) + '\n')
+         writer.close()
 
     logger.info('after load embedding vocab size is {}'.format(vocab.size()))
     # print(vocab.embeddings.shape)
@@ -67,19 +70,20 @@ if __name__ == '__main__':
     from model.char_cnn2 import  CharCNN
     from model.bilstm import  BLSTM
     from model.bilstm_gru import  BLSTMGRU
-    from model.multi_text_cnn import  MultiTextCNN
-    from model.char_word_cnn import  CharTextCNN
+    #from model.multi_text_cnn import  MultiTextCNN
+    #from model.char_word_cnn import  CharTextCNN
     # model = CharTextCNN(vocab,num_class=2,pretrained_word_embedding=vocab.embeddings)
-    model = BLSTM(vocab,num_class=2,pretrained_word_embedding=vocab.embeddings)
+    #model = BLSTMGRU(vocab,num_class=606,pretrained_word_embedding=vocab.embeddings)
     #model = CharTextCNN(vocab,num_class=2)
-    #model = ABLSTM(vocab,num_class=2)
-    #model = TextCNN (vocab,num_class=2,pretrained_word_embedding=vocab.embeddings)
+    #model = ABLSTM(vocab,num_class=606,pretrained_word_embedding=vocab.embeddings)
+    model = TextCNN (vocab,num_class=606,word_embedding_size=300)
+    #model = TextCNN (vocab,num_class=606,pretrained_word_embedding=vocab.embeddings)
     # tf.reset_default_graph()
     # print("----------text cnn -----------")
     #model = CharTextCNN(vocab,pretrained_word_embedding=vocab.embeddings,num_class=2)
     model.compile(tf.train.AdamOptimizer, 0.001)
     # # sys.exit(1)
-    model.train_and_evaluate(brc_data,evaluator=None,epochs=5,save_dir="checkpoint")
+    #model.train_and_evaluate(brc_data,evaluator=None,epochs=5,save_dir="/home/wujindou/cnn_checkpoints")
     #
     # tf.reset_default_graph()
     #
@@ -114,8 +118,8 @@ if __name__ == '__main__':
     #
     # tf.reset_default_graph()
 
-
-    model.load("")
+    #
+    model.load("/home/wujindou/cnn_checkpoints/best_weights")
     model.inference(brc_data,16)
 
     # from model.bilstm import  BLSTM

@@ -6,8 +6,8 @@ import collections
 import six
 import sys
 
-from libraries_albert import modeling_bak
-from libraries_albert import tokenization
+from libraries import modeling
+from libraries import tokenization
 import logging
 
 
