@@ -19,6 +19,7 @@ This module implements the Vocab class for converting string to id and back
 """
 
 import numpy as np
+import pickle
 
 
 class Vocab(object):
@@ -26,7 +27,7 @@ class Vocab(object):
     Implements a vocabulary to store the tokens in the data, with their corresponding embeddings.
     """
 
-    def __init__(self, filename=None, initial_tokens=None, lower=False):
+    def __init__(self, filename=None, initial_tokens=None, lower=False,prefix=''):
         self.id2token = {}
         self.id2char = {}
         self.char2id = {}
@@ -34,6 +35,12 @@ class Vocab(object):
         self.token2id = {}
         self.token_cnt = {}
         self.lower = lower
+        self.prefix =prefix 
+        self.save_tok2id_file = self.prefix+'tok2id.pkl'
+        self.save_id2tok_file = self.prefix+'id2tok.pkl'
+
+        self.save_char2id_file =self.prefix+'char2id.pkl'
+        self.save_id2char_file =self.prefix+'id2char.pkl'
 
         self.embed_dim = None
         self.embeddings = None
@@ -59,6 +66,13 @@ class Vocab(object):
         """
         return len(self.id2token)
 
+    def save(self):
+        self.save_char_vocab()
+        self.save_word_vocab()
+    def load(self):
+        self.load_char_vocab()
+        self.load_word_vocab()
+
     def load_from_file(self, file_path):
         """
         loads the vocab from file_path
@@ -72,6 +86,39 @@ class Vocab(object):
             # token = line.rstrip('\n')
             self.token2id[token] = int(id)  # token = line.rstrip('\n')
             self.id2token[int(id)] = token
+
+    def save_word_vocab(self):
+        """
+        save word vocab
+        :return:
+        """
+
+        with open(self.save_tok2id_file, 'wb') as handle:
+            pickle.dump(self.token2id, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open(self.save_id2tok_file,'wb') as fp:
+            pickle.dump(self.id2token,fp,protocol=pickle.HIGHEST_PROTOCOL)
+
+    def load_word_vocab(self):
+        """
+        load word vocab from pickle
+        :return:
+        """
+        self.token2id = pickle.load(open(self.save_tok2id_file, "rb"))
+        self.id2token = pickle.load(open(self.save_id2tok_file,"rb"))
+
+    def save_char_vocab(self):
+        with open(self.save_char2id_file, 'wb') as handle:
+            pickle.dump(self.char2id, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open(self.save_id2char_file, 'wb') as fp:
+            pickle.dump(self.id2char, fp, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def load_char_vocab(self):
+        """
+		load word vocab from pickle
+		:return:
+		"""
+        self.char2id = pickle.load(open(self.save_char2id_file, "rb"))
+        self.id2char = pickle.load(open(self.save_id2char_file, "rb"))
 
     def get_id(self, token):
         """

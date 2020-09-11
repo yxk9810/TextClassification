@@ -9,18 +9,24 @@ np.random.seed(12345)
 import sys
 import re
 from utils.proprocess import clean_text, clean_numbers,clean_date
-from dict.read_dict import *
-for name in names: jieba.add_word(name)
-from libraries_albert.BertWrapper import BertDataHelper
+from utils.clean_tool import clean_title
+# from dict.read_dict import *
+# for name in names: jieba.add_word(name)
+import pickle
+names = set()
+import os
+ask_word = set()
+from libraries.BertWrapper import BertDataHelper
 
 class DatasetReader(object):
     def __init__(self, data_file=None, train_file=None, dev_file=None,test_file =None,use_name_feature=True,use_pos_feature=False,use_char=True,use_bert=True,
-                 bert_dir = '/Users/apple/Downloads/chinese_L-12_H-768_A-12',label_index = 0,max_seq_len=40):
-        self.max_len = 22
+                 bert_dir = '/Users/apple/Downloads/chinese_L-12_H-768_A-12',label_index = 0,max_seq_len=20,prefix=''):
+        self.max_len = 20
         self.max_c_len = 40
         self.max_seq_len =max_seq_len
         self.dataset = []
         self.test_set = []
+        self.prefix =prefix 
         self.use_name_feature = use_name_feature
         self.use_pos_feature = use_pos_feature
         self.use_char = use_char
@@ -67,16 +73,36 @@ class DatasetReader(object):
             sys.exit(1)
 
         if train_file:
-            self.train_set = self._load_dataset(train_file)
+            train_save_pk_file = self.prefix+'train.pkl'
+            if not os.path.exists(train_save_pk_file):
+                self.train_set = self._load_dataset(train_file)
+                with open(train_save_pk_file,'wb') as f:
+                    pickle.dump(self.train_set,f)
+            else:
+                with open(train_save_pk_file,'rb') as f:
+                    self.train_set =pickle.load(f)
+                    print("load train set size="+str(len(self.train_set)))
         if dev_file:
-            self.dev_set = self._load_dataset(dev_file)
+            dev_save_pk_file = self.prefix+'dev.pkl'
+            if not os.path.exists(dev_save_pk_file):
+                self.dev_set = self._load_dataset(dev_file)
+
+                with open(dev_save_pk_file, 'wb') as f:
+                    pickle.dump(self.dev_set, f)
+            else:
+                with open(dev_save_pk_file,'rb') as f:
+                    self.dev_set = pickle.load(f)
+                    print("loading dev set size="+str(len(self.train_set)))
+
         if test_file:
-            self.test_set = self._load_dataset(test_file)
+            self.test_set = self._load_dataset(test_file,is_test=True)
 
-        self.logger.info('train set size: {} '.format(len(self.train_set)))
-        self.logger.info('dev set size: {}'.format(len(self.dev_set)))
+        #print(self.train_set)#:self.logger.info('train set size: {} '.format(len(self.train_set)))
+        if train_file:self.logger.info('train set size: {} '.format(len(self.train_set)))
+        if dev_file:self.logger.info('dev set size: {}'.format(len(self.dev_set)))
+        if test_file:self.logger.info('test set size: {}'.format(len(self.test_set)))
 
-        # self.train_set, self.dev_set, self.test_set = [], [], []
+        if not train_file and not dev_file: self.train_set, self.dev_set, = [], []
         # if train_files:
         #     for train_file in train_files:
         #         self.train_set += self._load_dataset(train_file, train=True)
@@ -98,16 +124,16 @@ class DatasetReader(object):
     context \t label 
     '''
 
-    def _load_dataset(self, filename, use_char=False):
+    def _load_dataset(self, filename, use_char=False,is_test=False):
         dataset = []
         y = []
         pre = ''
         with open(filename, 'r', encoding='utf-8') as lines:
             for index,line in enumerate(lines):
-                if self.train_sentiment and index ==0:continue
-                if index>=2000:break
+                #if index>=20000:break
                 # if line.strip() == '' or len(line.strip()) == 0:
                 #     continue
+                item_id = None
                 if self.use_pos_feature:
                     data = line.strip().split('\t')
                     tokens = [w.split('#pos#')[0] for w in data[0].split()]
@@ -149,32 +175,27 @@ class DatasetReader(object):
 
 
                 else:
-                    # if len(line.strip().split(","))>=11:
-                    #     if pre!='':
-                    #         text = ",".join(line.strip().split(",")[:-10])
-                    #         text = pre+text
-                    #
-                    # labels =[] #[int(v) for v in line.strip().split(",")[2:] ]
-                    # for v in line.strip().split(",")[-9:]:
-                    #     if v == ' ':v = ''
-                    #     if v!='':labels.append(int(v)+1)
-                    #     else:
-                    #         labels.append(1)
-                    # # print(line.strip().split(","))
-                    # text =",".join(line.strip().split(",")[:-9])
-                    # print(text)
-                    # sys.exit(1)
-                    # else:
-
-
                     data = line.strip().split('\t')
+                    if not is_test and len(data)<2:continue# = line.strip().split('\t')
                     text  = data[0]
-                    label = int(data[1])
+                    label = int(data[1]) if not is_test else 0
+                    import re
+                    clean_title_str = re.sub(r'闪电购商品[\s\d+]{0,}', '', text.strip())
+                    if len(clean_title_str) < 2: continue
+                    if len(clean_title(clean_title_str).strip())==0:continue#if len(clean_title_str) < 2: continue
+                    if is_test:
+                        if len(data)<2:continue
+                        item_id = data[1]
+
+                    #valid_labels=[0,2,3,5,12,20,28,45,47,48,50,56,58,61,64,66,77,82,87,93,95,98,100,105,106,111,116,117,123,125,128,131,142,144,148,154,158,160,162,164,168,171,172,177,180,193,202,203,209,211,215,222,223,229,241,243,245,248,249,250,252,260,265,268,271,278,281,283,287,289,290,291]#label = int(data[1])
+                    #if label not in valid_labels:continue #char_tokens = []
+                    #label=valid_labels.index(label)#if label not in valid_labels:continue #char_tokens = []
                     char_tokens = []
-                    for token in jieba.lcut(clean_numbers(data[0])):
+                    for token in jieba.lcut(data[0][:40]):
                         char_tokens.extend(list(token))
                     # if not use_char:
-                    tokens = [token for token in jieba.lcut(clean_date(text)) if token.strip()!='']
+                    tokens = [token for token in list(text) if token.strip()!='']
+                    #tokens = [token for token in jieba.lcut(text) if token.strip()!='']
                     '''
                     tokens = data[0].split('\')
                     # print(tokens)
@@ -196,10 +217,12 @@ class DatasetReader(object):
 
                     # tokens = [token if not token.isdigit() and token.strip()!='' and not token.replace('.','',1).isdigit()else 'digit' for token in tokens]
                 # sample = {'raw_text': text, 'is_short': is_short_query_intent,'domain':int(int(query_domain))}
-                sample = {'raw_text': text, 'label': label}
+                sample = {'raw_text': text, 'label': label,'item_id':item_id}
+                sample2 = {'raw_text': clean_title_str, 'label': label,'item_id':item_id}
 
                 if self.use_bert:
-                    sample = self.bert_helper.convert_single_example_to_feature(sample,self.max_seq_len)
+                    sample = self.bert_helper.convert_single_example_to_feature(sample2,self.max_seq_len)
+                    sample['raw_text'] = text
                 sample['tokens'] = tokens#char_tokens if use_char else [token if not token.isnumeric() and token.strip()!='' and not token.replace('.','',1).isdigit()else 'digit' for token in tokens]
                 sample['char_tokens'] = char_tokens
                 if self.use_pos_feature:
@@ -321,7 +344,7 @@ class DatasetReader(object):
             #     batch_data['domain'].append(sample['domain'])
 
 
-        max_len = max(batch_data['text_len'])
+        max_len = self.max_len#max(batch_data['text_len'])
         max_c_len = max(batch_data['char_lens'])
         # max_c_len =128
         # print(max_c_len)
