@@ -14,9 +14,9 @@ class TextCNN(BaseModel):
              word_embedding_size=100,
              dropout_keep_prob=0.9,num_class=2,word_embedding_trainable=True,
              task_balance =1.0,
-             soft_temperature=1
+             soft_temperature=1,label_map=None
              ):
-        super(TextCNN, self).__init__(vocab)
+        super(TextCNN, self).__init__(vocab,label_map)
         self.filter_sizes1 = [2, 3, 4, 5, 6]
         self.filter_nums1 = [128, 128, 64, 64, 64]
         self.keep_prob = dropout_keep_prob
@@ -88,6 +88,7 @@ class TextCNN(BaseModel):
 
         #self.loss = tf.reduce_mean(focal_loss_softmax(labels=self.y,logits=logits,alpha=0.5))
         #self.loss = tf.reduce_mean(focal_loss_softmax(self.y,logits))#tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits,labels=self.y))
+        #self.loss = tf.reduce_mean(softmax_with_logits_label_smooth(logits=logits,labels=self.y))
         self.loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits,labels=self.y))
 
         # self.domain_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=domain_logits,labels=self.domain))

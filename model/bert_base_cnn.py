@@ -13,12 +13,15 @@ from du_train.du_trainer import Trainer
 
 
 class BertBaseline(BaseModel):
-    def __init__(self, vocab=None, bert_dir='', num_class=2,use_fp16=False,use_xla=False,label_map=None):
-        super(BertBaseline, self).__init__(vocab,use_xla=use_xla,label_map=label_map)
+    def __init__(self, vocab=None, bert_dir='', num_class=2,use_fp16=False,use_xla=False):
+        super(BertBaseline, self).__init__(vocab,use_xla=use_xla)
         self.bert_dir = bert_dir
         self.num_class = num_class
         self.use_fp16 = use_fp16
+        self.filter_sizes1 = [2, 3, 4, 5, 6]
+        self.filter_nums1 = [128, 128, 64, 64, 64]
         self._build_graph()
+
 
     def _build_graph(self):
         self.training = tf.placeholder_with_default(False, shape=(), name='is_training')
@@ -34,20 +37,35 @@ class BertBaseline(BaseModel):
 
         hidden_size = output_layer.shape[-1].value
 
-        output_weights = tf.get_variable(
-            "output_weights", [self.num_class, hidden_size],
-            initializer=tf.truncated_normal_initializer(stddev=0.02))
-
-        output_bias = tf.get_variable(
-            "output_bias", [self.num_class], initializer=tf.zeros_initializer())
+        # output_weights = tf.get_variable(
+        #     "output_weights", [self.num_class, hidden_size],
+        #     initializer=tf.truncated_normal_initializer(stddev=0.02))
+        #
+        # output_bias = tf.get_variable(
+        #     "output_bias", [self.num_class], initializer=tf.zeros_initializer())
 
         dropout = Dropout(0.9)
         output_layer = dropout(output_layer,self.training)
+
+        #add cnn layer
+        pooled = []
+        for idx, kernel_size in enumerate(self.filter_sizes1):
+            con1d = tf.layers.conv1d(output_layer, self.filter_nums1[idx], kernel_size, padding='same',
+                                     activation=tf.nn.relu,
+                                     name='conv1d-%d' % (idx))
+            pooled_conv = tf.reduce_max(con1d, axis=1)
+            pooled.append(pooled_conv)
+        merge = tf.concat(pooled, axis=1)
+        merge = dropout(merge, self.training)
+        merge = tf.layers.dense(merge, 128, activation=tf.nn.tanh, name='dense1')
+        # merge=tf.layers.batch_normalization(inputs=merge)
+        merge = dropout(merge, self.training)
+        logits = tf.layers.dense(merge, self.num_class, activation=None, use_bias=False)
         # if is_training:
         #     # I.e., 0.1 dropout
         #     output_layer = tf.nn.dropout(output_layer, keep_prob=0.9,)
-        logits = tf.matmul(output_layer, output_weights, transpose_b=True)
-        logits = tf.nn.bias_add(logits, output_bias)
+        # logits = tf.matmul(output_layer, output_weights, transpose_b=True)
+        # logits = tf.nn.bias_add(logits, output_bias)
         probabilities = tf.nn.softmax(logits, axis=-1,name="probs")
         log_probs = tf.nn.log_softmax(logits, axis=-1)
 

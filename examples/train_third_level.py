@@ -6,54 +6,58 @@ sys.path.append('/home/wujindou/classification_toolkit/')
 from data.data_reader_new import DatasetReader
 from tensorflow import set_random_seed
 set_random_seed(12345)
+import sys
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logger = logging.getLogger("brc")
     logger.setLevel(logging.INFO)
-    brc_data = DatasetReader(train_file='/home/wujindou/dataset/0905/train_clean_baihuo.csv',
+    brc_data = DatasetReader(train_file='/home/wujindou/dataset/0908/baihuoshipin/train_third.csv',
     #brc_data = DatasetReader(train_file='/home/wujindou/dataset/0905/train_baihuo_category_0905.csv',
-                             dev_file='/home/wujindou/dataset/0905/dev_baihuo_category_0905.csv',
-                             #test_file='/home/wujindou/dataset/0905/test_0907.csv',
-                             test_file='/home/wujindou/dataset/0905/test_baihuo_category_0905.csv',
+                             dev_file='/home/wujindou/dataset/0908/baihuoshipin/dev_third.csv',
+                             test_file='/home/wujindou/dataset/0908/baihuoshipin/dev_third.csv',
+                             #test_file='/home/wujindou/dataset/test/food_100_category.csv',
+                             #test_file='/home/wujindou/dataset/test/food_100_category.csv',
+                            # test_file='/home/wujindou/.jupyter/test_single.csv',
+                             #test_file='/home/wujindou/dataset/0908/baihuoshipin/dev_third.csv',
                              #test_file='/home/wujindou/dataset/0905/test_baihuo_category_0905.csv',
                              #test_file='/home/wujindou/dataset/0905/test_baihuo_category_0905.csv',
                              #test_file='/home/wujindou/dataset/test_product_category_0827.csv',
                              use_pos_feature=False,
+                             prefix='third',
                              use_bert=False
                              )
     from data.vocab import Vocab
-    do_inference = False#from data.vocab import Vocab
-    vocab = Vocab(lower=True)
-    import sys
-    for word in brc_data.word_iter(None):
-        vocab.add(word)
-        for char in word:
-            vocab.add_char(char)
-    logger.info(' char size {}'.format(vocab.get_char_vocab_size()))
-    logger.info(' vocab size {} '.format(vocab.get_word_vocab()))
-    #
-    unfiltered_vocab_size = vocab.size()
-    unfiltered_char_size = vocab.get_char_vocab_size()
-    vocab.filter_tokens_by_cnt(min_cnt=2)
-    vocab.filter_chars_by_cnt(min_cnt=2)
+    do_inference =True#from data.vocab import Vocab
+    vocab = Vocab(lower=True,prefix='third_level_baihuo_')
+    if not do_inference:
+        for word in brc_data.word_iter(None):
+            vocab.add(word)
+            for char in word:
+                vocab.add_char(char)
+        logger.info(' char size {}'.format(vocab.get_char_vocab_size()))
+        logger.info(' vocab size {} '.format(vocab.get_word_vocab()))
+        #
+        unfiltered_vocab_size = vocab.size()
+        unfiltered_char_size = vocab.get_char_vocab_size()
+        vocab.filter_tokens_by_cnt(min_cnt=2)
+        do_inference:vocab.filter_chars_by_cnt(min_cnt=2)
+        filtered_num = unfiltered_vocab_size - vocab.size()
+        logger.info('After filter {} tokens, the final vocab size is {}'.format(filtered_num,
+                                                                                vocab.size()))
 
-
-
-    filtered_num = unfiltered_vocab_size - vocab.size()
-    logger.info('After filter {} tokens, the final vocab size is {}'.format(filtered_num,
-                                                                            vocab.size()))
-
-    filtered_num = unfiltered_char_size -vocab.get_char_vocab_size()
-    logger.info('After filter {} tokens, the final vocab size is {}'.format(filtered_num,
-                                                                            vocab.get_char_vocab_size()))
-    # # sys.exit(1)
+        filtered_num = unfiltered_char_size -vocab.get_char_vocab_size()
+        logger.info('After filter {} tokens, the final vocab size is {}'.format(filtered_num,
+                                                                                vocab.get_char_vocab_size()))
+        # # sys.exit(1)
 
 
     import os
-    vocab_file = 'product_category_vocab4.txt'# vocab.load_from_file('vocab_bool.txt')
+    vocab_file = 'first_third_baihuo_vocab.txt'# vocab.load_from_file('vocab_bool.txt')
     if os.path.exists(vocab_file): vocab.load_from_file(vocab_file)
     if os.path.exists(vocab_file): vocab.load()
-    if  not  os.path.exists(vocab_file):vocab.load_pretrained_embeddings('/home/wujindou/sgns.merge.word')
+    if  not os.path.exists(vocab_file):vocab.load_pretrained_embeddings('/home/wujindou/sgns.merge.word')
+    #print(vocab.get_char_vocab_size())#if  not  os.path.exists(vocab_file):vocab.load_pretrained_embeddings('/home/wujindou/sgns.merge.word')
+    #sys.exit(1)#print(voab.get_word_vocab())#if  not  os.path.exists(vocab_file):vocab.load_pretrained_embeddings('/home/wujindou/sgns.merge.word')
 
     if not os.path.exists(vocab_file):
          vocab.save() 
@@ -85,7 +89,7 @@ if __name__ == '__main__':
     #model = ABLSTM(vocab,num_class=606,pretrained_word_embedding=vocab.embeddings)
     #model = ABLSTM(vocab,num_class=606,pretrained_word_embedding=vocab.embeddings)
     #model = TextCNN (vocab,num_class=297,pretrained_word_embedding=vocab.embeddings)
-    model = CharTextCNN (vocab,num_class=297,pretrained_word_embedding=vocab.embeddings,word_embedding_size=300)
+    model = CharTextCNN (vocab,num_class=292,pretrained_word_embedding=vocab.embeddings,word_embedding_size=300)
     #model = TextCNN (vocab,num_class=297,pretrained_word_embedding=vocab.embeddings,word_embedding_size=300)
     #model = TextCNN (vocab,num_class=297,pretrained_word_embedding=vocab.embeddings,word_embedding_size=300)
     #model = TextCNN (vocab,num_class=297,word_embedding_size=300)
@@ -97,7 +101,7 @@ if __name__ == '__main__':
     #model = CharTextCNN(vocab,pretrained_word_embedding=vocab.embeddings,num_class=2)
     if not do_inference:model.compile(tf.train.AdamOptimizer, 0.001)
      # sys.exit(1)
-    if not do_inference:model.train_and_evaluate(brc_data,evaluator=None,epochs=10,save_dir="/home/wujindou/char_word_cnn_checkpoints",summary_dir='/home/wujindou/summary_writer')
+    if not do_inference:model.train_and_evaluate(brc_data,evaluator=None,epochs=10,save_dir="/home/wujindou/third_level_baihuo_checkpoint",summary_dir='/home/wujindou/summary_writer')
     #
     # tf.reset_default_graph()
     #
@@ -133,8 +137,8 @@ if __name__ == '__main__':
     # tf.reset_default_graph()
 
     #
-    model.load("/home/wujindou/char_word_cnn_checkpoints/best_weights")
-    model.inference(brc_data,64)
+    model.load("/home/wujindou/third_level_baihuo_checkpoint/best_weights")
+    model.inference(brc_data,1)
 
     # from model.bilstm import  BLSTM
     # model = BLSTM(vocab)

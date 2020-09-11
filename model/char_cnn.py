@@ -1,98 +1,124 @@
 #coding:utf-8
-from model.base import BaseModel
+import numpy as np
+np.random.seed(12345)
 import tensorflow as tf
+tf.set_random_seed(12345)
+from model.base import BaseModel
 from nn.layer import Embedding,Dropout
-from nn.recurrent import BiLSTM
+
 from collections import OrderedDict
-from nn.layer import MultiHeadAttention,create_padding_mask
-class CharCNN(BaseModel):
-    def __init__(self, vocab, pretrained_word_embedding=None,
+from du_train.du_trainer import Trainer
+
+class TextCNN(BaseModel):
+    def __init__(self,vocab,pretrained_word_embedding=None,
              word_embedding_size=100,
-             rnn_hidden_size = 64,
-             dropout_keep_prob=0.9, num_class=3):
-        super(CharCNN, self).__init__(vocab)
+             dropout_keep_prob=0.9,num_class=2,word_embedding_trainable=True,
+             task_balance =1.0,
+             soft_temperature=1
+             ):
+        super(TextCNN, self).__init__(vocab)
+        self.filter_sizes1 = [2, 3, 4, 5, 6]
+        self.filter_nums1 = [128, 128, 64, 64, 64]
         self.keep_prob = dropout_keep_prob
         self.num_class = num_class
-        self.word_embedding_size = word_embedding_size
+        self.word_embedding_size =word_embedding_size
         self.pretrained_word_embedding = pretrained_word_embedding
-        self.word_embedding_trainable = True
-        self.rnn_hidden_size =rnn_hidden_size
-        self.kernel_size = [3,3]
+        self.word_embedding_trainable = word_embedding_trainable
+        self.pos_vocab_size = 56
+        self.pos_embedding_size =12
+        self.task_balance=task_balance
+        self.softmax_temperature =soft_temperature
         self._build_graph()
 
     def _build_graph(self):
-        self.x = tf.placeholder(tf.int32, [None, None])
-        self.x_len = tf.placeholder(tf.int32,[None])
-        self.y = tf.placeholder(tf.int32, [None])
-        self.training = tf.placeholder_with_default(False, shape=(), name='is_training')
+        self.x = tf.placeholder(tf.int32,[None,None])
+        self.y = tf.placeholder(tf.int32,[None])
+        self.domain = tf.placeholder(tf.int32,[None])
+        print(self.x)
+        # self.soft_target = tf.placeholder(tf.float32,[None,None])
+        self.pos_feature = tf.placeholder(tf.int32,[None,None])
+        # self.ask_word_feature = tf.placeholder(tf.int32,[None,None])
+        # self.in_name_feature = tf.placeholder(tf.int32,[None,None])
 
-        self.filters = 100
-
-        divisors = tf.pow(tf.constant([10000.0] * (self.filters // 2), dtype=tf.float32),
-                          tf.range(0, self.filters, 2, dtype=tf.float32) / self.filters)
-        quotients = tf.cast(tf.expand_dims(tf.range(0, tf.reduce_max(self.x_len)), -1), tf.float32) / tf.expand_dims(divisors, 0)
-        position_repr = tf.concat([tf.sin(quotients), tf.cos(quotients)], -1)
-
+        self.training = tf.placeholder_with_default(False,shape=(),name='is_training')
 
         word_embedding = Embedding(pretrained_embedding=self.pretrained_word_embedding,
-                                   embedding_shape=(self.vocab.get_word_vocab() + 1, self.word_embedding_size),
+                                   embedding_shape=(self.vocab.get_word_vocab(), self.word_embedding_size),
                                    trainable=self.word_embedding_trainable)
 
         input_x = word_embedding(self.x)
-        dropout = Dropout(self.keep_prob)
-        input_x = dropout(input_x, self.training)
-        for layer in range(len(self.kernel_size)):
-            norm_x = tf.layers.batch_normalization(input_x)
-            input_x+=tf.layers.conv1d(norm_x,self.filters,self.kernel_size[layer],strides=1,padding='SAME',activation=tf.nn.relu)
 
-        input_x = input_x+position_repr
-        mask = create_padding_mask(self.x)
+        pos_embedding = Embedding(pretrained_embedding=None,
+                                   embedding_shape=(self.pos_vocab_size, self.pos_embedding_size))
 
-
-        tmp_ma = MultiHeadAttention(self.filters,5)
-        norm_x = tf.layers.batch_normalization(input_x)
-        mha_out,_ = tmp_ma(norm_x,norm_x,norm_x,mask=mask)
-        input_x+=mha_out
-
-        tmp_ma2 = MultiHeadAttention(self.filters,5)
-        norm_x = tf.layers.batch_normalization(input_x)
-        mha2_out,_ = tmp_ma2(norm_x,norm_x,norm_x,mask=mask)
-        input_x+=mha2_out
-
-        # encoder1 = BiLSTM(self.rnn_hidden_size,name='layer_1')
-        # input_x,_ = encoder1(input_x,self.x_len)
+        input_x_pos = pos_embedding(self.pos_feature)
         #
-        # encoder2 = BiLSTM(self.rnn_hidden_size,name='layer_2')
-        # input_x,_ = encoder2(input_x,self.x_len)
+        # feature_x = tf.one_hot(self.in_name_feature,depth=2)
+        # ask_word_feature = tf.one_hot(self.ask_word_feature,depth=2)
+        # input_x = tf.concat([input_x,feature_x],axis=-1)
+        # # input_x = tf.concat([input_x,ask_word_feature],axis=-1)
+        # input_x = tf.concat([input_x,input_x_pos],axis=-1)
         # print(input_x.shape)
-        # merge = tf.reshape(input_x,[tf.shape(input_x)[0],-1])
+        dropout = Dropout(self.keep_prob)
+        input_x = dropout(input_x,self.training)
+        pooled =[]
+        for idx,kernel_size in enumerate(self.filter_sizes1):
+            con1d = tf.layers.conv1d(input_x,self.filter_nums1[idx],kernel_size,padding='same',activation=tf.nn.relu,
+                                     name='conv1d-%d'%(idx))
+            pooled_conv = tf.reduce_max(con1d,axis=1)
+            pooled.append(pooled_conv)
+        merge  = tf.concat(pooled,axis=1)
+        merge = dropout(merge,self.training)
+        # merge = tf.layers.batch_normalization(inputs=merge)
+        # dense1 = tf.keras.layers.Dense(128,activation=tf.nn.tanh)
+        merge = tf.layers.dense(merge,128,activation=tf.nn.tanh,name='dense1')
+        # merge=tf.layers.batch_normalization(inputs=merge)
+        merge = dropout(merge,self.training)
+        logits = tf.layers.dense(merge,self.num_class,activation=None,use_bias=False)
+        # logits = dense2(merge,name='dense2')
+        self.prob = tf.nn.softmax(logits)
 
-        avg_pool = tf.reduce_mean(input_x,axis=1)
-        avg_max =  tf.reduce_max(input_x,axis=1)
+        domain_logits = tf.layers.dense(merge,2,activation=None,use_bias=False)
+        self.domain_prob = tf.nn.softmax(domain_logits)
+        # print(self.prob)
 
-        merge = tf.concat([avg_pool,avg_max],axis=1)
-        # print(merge.shape)
-        # h_conc_linear1 = tf.keras.layers.Dense(200,use_bias=False,activation=tf.nn.relu)(merge)
-        # h_conc_linear2 = tf.keras.layers.Dense(200,use_bias=False,activation=tf.nn.relu)(merge)
-        # merge = merge+h_conc_linear1+h_conc_linear2
+        from nn.loss import  softmax_with_logits_label_smooth
 
-        #
-        # dense = tf.keras.layers.Dense(16,activation=tf.nn.relu)
-        # merge = dense(merge)
-        # merge = dropout(merge, self.training)
-        self.logits = tf.keras.layers.Dense(self.num_class,activation=None)(merge)
-        self.loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.logits,labels=self.y))
+        from nn.loss import focal_loss_softmax
+
+        #self.loss = tf.reduce_mean(focal_loss_softmax(labels=self.y,logits=logits,alpha=0.5))
+        #self.loss = tf.reduce_mean(focal_loss_softmax(self.y,logits))#tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits,labels=self.y))
+        self.loss = tf.reduce_mean(softmax_with_logits_label_smooth(logits=logits,labels=self.y))
+        #self.loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits,labels=self.y))
+
+        # self.domain_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=domain_logits,labels=self.domain))
+        # self.loss+=self.loss + lossL2
+
+        # self.soft_loss = tf.reduce_mean(
+        #     tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits/self.softmax_temperature,labels=self.soft_target)
+        # )
+        # self.task_balance=1.0
+        # self.soft_loss =0.0
+        # self.loss *=self.task_balance
+        # self.loss += (1-self.task_balance)*self.soft_loss*(self.softmax_temperature**2)
+        # self.loss +=self.domain_loss
         global_step = tf.train.get_or_create_global_step()
 
         self.input_placeholder_dict = OrderedDict({
-            "char_ids": self.x,
-            "labels": self.y,
-            "text_len":self.x_len,
-            "training": self.training
+            "token_ids": self.x,
+            "labels":self.y,
+            # "domain":self.domain,
+            # 'soft_target':self.soft_target,
+            # "features":self.in_name_feature,
+            # "pos_feature":self.pos_feature,
+            # 'ask_word_feature':self.ask_word_feature,
+            "training": self.training,
         })
 
         self.output_variable_dict = OrderedDict({
-            "predict": tf.argmax(self.logits, axis=1)
+            "predict": tf.argmax(logits,axis=1),
+            "prob":self.prob
+
         })
 
         # 8. Metrics and summary
@@ -117,13 +143,15 @@ class CharCNN(BaseModel):
         tf.summary.scalar('loss', self.loss)
         self.summary_op = tf.summary.merge_all()
 
-    def compile(self, optimizer, initial_lr, clip_norm=5.0):
+    def compile(self, optimizer, initial_lr,clip_norm=5.0):
         self.optimizer = optimizer(initial_lr)
         grads, vars = zip(*self.optimizer.compute_gradients(self.loss))
-        gradients, _ = tf.clip_by_global_norm(grads, clip_norm=clip_norm)
+        gradients, _ = tf.clip_by_global_norm(grads,clip_norm=clip_norm)
         self.train_op = self.optimizer.apply_gradients(zip(gradients, vars))
 
 
+    def evaluate(self, batch_generator, evaluator):
 
+        Trainer._evaluate(self, batch_generator, evaluator)
 
 

@@ -8,8 +8,8 @@ class BLSTMGRU(BaseModel):
     def __init__(self, vocab, pretrained_word_embedding=None,
              word_embedding_size=100,
              rnn_hidden_size = 128,
-             dropout_keep_prob=0.9, num_class=3):
-        super(BLSTMGRU, self).__init__(vocab)
+             dropout_keep_prob=0.9, num_class=3,label_map=None):
+        super(BLSTMGRU, self).__init__(vocab,label_map=label_map)
         self.keep_prob = dropout_keep_prob
         self.num_class = num_class
         self.word_embedding_size = word_embedding_size

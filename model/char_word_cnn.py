@@ -7,7 +7,7 @@ from model.base import BaseModel
 from nn.layer import Embedding,Dropout
 
 from collections import OrderedDict
-from train.du_trainer import Trainer
+from du_train.du_trainer import Trainer
 from nn.layer import UniAttention,ProjectedDotProduct
 
 class CharTextCNN(BaseModel):
@@ -33,19 +33,19 @@ class CharTextCNN(BaseModel):
         # self.x_len = tf.placeholder(tf.int32,[None])
         # self.x_char_len = tf.placeholder(tf.int32,[None])
         self.y = tf.placeholder(tf.int32,[None])
-        self.pos_feature = tf.placeholder(tf.int32,[None,None])
+        #self.pos_feature = tf.placeholder(tf.int32,[None,None])
         # self.ask_word_feature = tf.placeholder(tf.int32,[None,None])
         # self.in_name_feature = tf.placeholder(tf.int32,[None,None])
 
         self.training = tf.placeholder_with_default(False,shape=(),name='is_training')
 
         word_embedding = Embedding(pretrained_embedding=self.pretrained_word_embedding,
-                                   embedding_shape=(self.vocab.get_word_vocab()+ 1, self.word_embedding_size),
+                                   embedding_shape=(self.vocab.get_word_vocab()+ 1 if self.pretrained_word_embedding!=None else self.vocab.get_word_vocab(), self.word_embedding_size),
                                    trainable=self.word_embedding_trainable)
 
 
         char_embedding = Embedding(pretrained_embedding=None,
-                                   embedding_shape=(self.vocab.get_char_vocab_size()+ 1, self.word_embedding_size),
+                                   embedding_shape=(self.vocab.get_char_vocab_size()+ 1 , self.word_embedding_size),
                                    trainable=True)
         x_char_embeded = char_embedding(self.x_char)
         print(x_char_embeded)
@@ -56,13 +56,13 @@ class CharTextCNN(BaseModel):
         pos_embedding = Embedding(pretrained_embedding=None,
                                   embedding_shape=(self.pos_vocab_size, self.pos_embedding_size))
 
-        input_x_pos = pos_embedding(self.pos_feature)
+        #input_x_pos = pos_embedding(self.pos_feature)
         # #
         # feature_x = tf.one_hot(self.in_name_feature,depth=2)
         # # ask_word_feature = tf.one_hot(self.ask_word_feature,depth=2)
         # input_x = tf.concat([input_x,feature_x],axis=-1)
         # # input_x = tf.concat([input_x,ask_word_feature],axis=-1)
-        input_x = tf.concat([input_x,input_x_pos],axis=-1)
+        #input_x = tf.concat([input_x,input_x_pos],axis=-1)
         # print(input_x.shape)
         dropout = Dropout(self.keep_prob)
         input_x = dropout(input_x,self.training)
@@ -132,7 +132,7 @@ class CharTextCNN(BaseModel):
             # 'char_lens':self.x_char_len,
             # "features":self.in_name_feature,
             "char_ids":self.x_char,
-            "pos_feature":self.pos_feature,
+        #    "pos_feature":self.pos_feature,
             # 'ask_word_feature':self.ask_word_feature,
             "training": self.training,
         })
