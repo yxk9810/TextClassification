@@ -7,7 +7,7 @@ from model.base import BaseModel
 from nn.layer import Embedding,Dropout
 
 from collections import OrderedDict
-from du_train.du_trainer import Trainer
+from train.du_trainer import Trainer
 
 class TextCNN(BaseModel):
     def __init__(self,vocab,pretrained_word_embedding=None,

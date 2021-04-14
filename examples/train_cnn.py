@@ -2,7 +2,7 @@
 import tensorflow as tf
 import logging
 import sys
-sys.path.append('/home/wujindou/classification_toolkit/')
+sys.path.append('/Users/wujindou/Projects/text_classification')
 from data.data_reader_new import DatasetReader
 from tensorflow import set_random_seed
 set_random_seed(12345)
@@ -10,11 +10,11 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logger = logging.getLogger("brc")
     logger.setLevel(logging.INFO)
-    brc_data = DatasetReader(train_file='/home/wujindou/dataset/0905/train_clean_baihuo.csv',
+    brc_data = DatasetReader(train_file='/Users/wujindou/Downloads/projects/politic_intent_detection/all_query/train_all_0414.txt',
     #brc_data = DatasetReader(train_file='/home/wujindou/dataset/0905/train_baihuo_category_0905.csv',
-                             dev_file='/home/wujindou/dataset/0905/dev_baihuo_category_0905.csv',
+                             dev_file='/Users/wujindou/Downloads/projects/politic_intent_detection/all_query/val_all_0414.txt',
                              #test_file='/home/wujindou/dataset/0905/test_0907.csv',
-                             test_file='/home/wujindou/dataset/0905/test_baihuo_category_0905.csv',
+                             test_file='/Users/wujindou/Downloads/projects/politic_intent_detection/all_query/test_all_0414.txt',
                              #test_file='/home/wujindou/dataset/0905/test_baihuo_category_0905.csv',
                              #test_file='/home/wujindou/dataset/0905/test_baihuo_category_0905.csv',
                              #test_file='/home/wujindou/dataset/test_product_category_0827.csv',
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     vocab_file = 'product_category_vocab4.txt'# vocab.load_from_file('vocab_bool.txt')
     if os.path.exists(vocab_file): vocab.load_from_file(vocab_file)
     if os.path.exists(vocab_file): vocab.load()
-    if  not  os.path.exists(vocab_file):vocab.load_pretrained_embeddings('/home/wujindou/sgns.merge.word')
+    # if  not  os.path.exists(vocab_file):vocab.load_pretrained_embeddings('/home/wujindou/sgns.merge.word')
 
     if not os.path.exists(vocab_file):
          vocab.save() 
@@ -73,11 +73,11 @@ if __name__ == '__main__':
     from model.text_cnn import TextCNN
     from model.abilstm import  ABLSTM
     from model.bcnn import  BCNN
-    from model.char_cnn import CharCNN
+    # from model.char_cnn import CharCNN
     from model.char_cnn2 import  CharCNN
     from model.bilstm import  BLSTM
     from model.bilstm_gru import  BLSTMGRU
-    from model.multi_text_cnn import  MultiTextCNN
+    # from model.multi_text_cnn import  MultiTextCNN
     from model.char_word_cnn import  CharTextCNN
     # model = CharTextCNN(vocab,num_class=2,pretrained_word_embedding=vocab.embeddings)
     #model = BLSTMGRU(vocab,num_class=606,pretrained_word_embedding=vocab.embeddings)
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     #model = ABLSTM(vocab,num_class=606,pretrained_word_embedding=vocab.embeddings)
     #model = ABLSTM(vocab,num_class=606,pretrained_word_embedding=vocab.embeddings)
     #model = TextCNN (vocab,num_class=297,pretrained_word_embedding=vocab.embeddings)
-    model = CharTextCNN (vocab,num_class=297,pretrained_word_embedding=vocab.embeddings,word_embedding_size=300)
+    model = CharTextCNN (vocab,num_class=4,pretrained_word_embedding=vocab.embeddings,word_embedding_size=300)
     #model = TextCNN (vocab,num_class=297,pretrained_word_embedding=vocab.embeddings,word_embedding_size=300)
     #model = TextCNN (vocab,num_class=297,pretrained_word_embedding=vocab.embeddings,word_embedding_size=300)
     #model = TextCNN (vocab,num_class=297,word_embedding_size=300)
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     #model = CharTextCNN(vocab,pretrained_word_embedding=vocab.embeddings,num_class=2)
     if not do_inference:model.compile(tf.train.AdamOptimizer, 0.001)
      # sys.exit(1)
-    if not do_inference:model.train_and_evaluate(brc_data,evaluator=None,epochs=10,save_dir="/home/wujindou/char_word_cnn_checkpoints",summary_dir='/home/wujindou/summary_writer')
+    if not do_inference:model.train_and_evaluate(brc_data,evaluator=None,epochs=10,save_dir="")
     #
     # tf.reset_default_graph()
     #

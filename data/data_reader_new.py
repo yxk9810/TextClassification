@@ -9,7 +9,7 @@ np.random.seed(12345)
 import sys
 import re
 from utils.proprocess import clean_text, clean_numbers,clean_date
-from utils.clean_tool import clean_title
+# from utils.clean_tool import clean_title
 # from dict.read_dict import *
 # for name in names: jieba.add_word(name)
 import pickle
@@ -128,9 +128,10 @@ class DatasetReader(object):
         dataset = []
         y = []
         pre = ''
+        index = 0 
         with open(filename, 'r', encoding='utf-8') as lines:
             for index,line in enumerate(lines):
-                #if index>=20000:break
+                if index>=20000:break
                 # if line.strip() == '' or len(line.strip()) == 0:
                 #     continue
                 item_id = None
@@ -182,7 +183,7 @@ class DatasetReader(object):
                     import re
                     clean_title_str = re.sub(r'闪电购商品[\s\d+]{0,}', '', text.strip())
                     if len(clean_title_str) < 2: continue
-                    if len(clean_title(clean_title_str).strip())==0:continue#if len(clean_title_str) < 2: continue
+                    # if len(clean_title(clean_title_str).strip())==0:continue#if len(clean_title_str) < 2: continue
                     if is_test:
                         if len(data)<2:continue
                         item_id = data[1]

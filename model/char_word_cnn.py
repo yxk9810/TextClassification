@@ -7,7 +7,7 @@ from model.base import BaseModel
 from nn.layer import Embedding,Dropout
 
 from collections import OrderedDict
-from du_train.du_trainer import Trainer
+from train.du_trainer import Trainer
 from nn.layer import UniAttention,ProjectedDotProduct
 
 class CharTextCNN(BaseModel):

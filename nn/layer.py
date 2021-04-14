@@ -3,7 +3,7 @@ import numpy as np
 np.random.seed(12345)
 import tensorflow as tf
 tf.set_random_seed(12345)
-from  import modeling
+from libraries import modeling
 
 class Layer(object):
     _name_dict = defaultdict(int)
