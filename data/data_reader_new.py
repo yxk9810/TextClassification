@@ -75,7 +75,7 @@ class DatasetReader(object):
         if train_file:
             train_save_pk_file = self.prefix+'train.pkl'
             if not os.path.exists(train_save_pk_file):
-                self.train_set = self._load_dataset(train_file)
+                self.train_set = self._load_dataset(train_file,is_train=True)
                 with open(train_save_pk_file,'wb') as f:
                     pickle.dump(self.train_set,f)
             else:
@@ -124,14 +124,14 @@ class DatasetReader(object):
     context \t label 
     '''
 
-    def _load_dataset(self, filename, use_char=False,is_test=False):
+    def _load_dataset(self, filename, use_char=False,is_test=False,is_train=False):
         dataset = []
         y = []
         pre = ''
         index = 0 
         with open(filename, 'r', encoding='utf-8') as lines:
             for index,line in enumerate(lines):
-                if index>=20000:break
+                if index>=2000 and is_train :break
                 # if line.strip() == '' or len(line.strip()) == 0:
                 #     continue
                 item_id = None

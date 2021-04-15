@@ -219,6 +219,7 @@ class Trainer(object):
         # print(data.split('\n')[3].split('    '))
         f1 = float(data.split('\n')[3].split('    ')[-3])
         # sys.exit(1)
+        # f1=0.0
         acc = np.sum(np.equal(np.array(pred), np.array(labels))) / float(len(labels))
 
         return {'acc':acc,'f1':f1}

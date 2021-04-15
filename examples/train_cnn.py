@@ -10,11 +10,12 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     logger = logging.getLogger("brc")
     logger.setLevel(logging.INFO)
-    brc_data = DatasetReader(train_file='/Users/wujindou/Downloads/projects/politic_intent_detection/all_query/train_all_0414.txt',
+    data_folder='/Users/wujindou/Downloads/projects/politic_intent_detection/'
+    brc_data = DatasetReader(train_file=data_folder+'/all_query/train_all_0414.txt',
     #brc_data = DatasetReader(train_file='/home/wujindou/dataset/0905/train_baihuo_category_0905.csv',
-                             dev_file='/Users/wujindou/Downloads/projects/politic_intent_detection/all_query/val_all_0414.txt',
+                             dev_file=data_folder+'/all_query/val_all_0414.txt',
                              #test_file='/home/wujindou/dataset/0905/test_0907.csv',
-                             test_file='/Users/wujindou/Downloads/projects/politic_intent_detection/all_query/test_all_0414.txt',
+                             test_file=data_folder+'/all_query/test_all_0414.txt',
                              #test_file='/home/wujindou/dataset/0905/test_baihuo_category_0905.csv',
                              #test_file='/home/wujindou/dataset/0905/test_baihuo_category_0905.csv',
                              #test_file='/home/wujindou/dataset/test_product_category_0827.csv',
