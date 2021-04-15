@@ -10,6 +10,9 @@ from collections import defaultdict
 import sys
 # from dict.read_dict import movie_name
 import time
+from sklearn.metrics import f1_score
+from sklearn.metrics import classification_report
+
 movie_name = set()
 # from data.elmo_data_handler import *
 class Trainer(object):
@@ -199,7 +202,6 @@ class Trainer(object):
 
     @staticmethod
     def get_score(output,labels):
-        from sklearn.metrics import classification_report
         train_probs = [prob[1] for prob in output['prob']]
         # from utils.proprocess import  bestThresshold
         # delta,best_f1 = bestThresshold(labels,train_probs)
@@ -283,7 +285,12 @@ class Trainer(object):
         print(len(final_output['predict']))# Get the values of the metrics
         #sys.exit(1)#print(len(final_output['predict']))# Get the values of the metrics
         writer = open(str(f1)+'_1011.txt','a+',encoding='utf-8')
+        labels = [] 
+        predict_labels = [] 
         for i,sample in enumerate(samples):
+            labels.append(sample['label'])
+            predict_labels.append(final_output['predict'][i])
             writer.write(sample['raw_text']+'\t'+str(final_output['predict'][i])+'\t'+' '.join([str(v) for v in final_output['prob'][i]])+'\n')
         writer.close()
+        print(classification_report(labels,pred,digits=4))
         return final_output, samples
