@@ -131,7 +131,7 @@ class DatasetReader(object):
         index = 0 
         with open(filename, 'r', encoding='utf-8') as lines:
             for index,line in enumerate(lines):
-                if index>=2000 and is_train :break
+                #if index>=2000 and is_train :break
                 # if line.strip() == '' or len(line.strip()) == 0:
                 #     continue
                 item_id = None

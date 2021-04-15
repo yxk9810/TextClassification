@@ -222,7 +222,7 @@ class Trainer(object):
         # f1=0.0
         acc = np.sum(np.equal(np.array(pred), np.array(labels))) / float(len(labels))
 
-        return {'acc':acc,'f1':f1}
+        return {'acc':acc,'f1':acc}
     @staticmethod
     def _evaluate(model, batch_generator, evaluator):
         # Evaluate for one epoch on dev set
@@ -277,11 +277,11 @@ class Trainer(object):
                 [model.output_variable_dict, model.training], feed_dict=feed_dict)
             for key in output.keys():
                 final_output[key] += [v for v in output[key]]
-            print("cost ..."+str(time.time()-start))#test_batch = {}
+            #print("cost ..."+str(time.time()-start))#test_batch = {}
         # Get the values of the metrics
         print(len(samples))# Get the values of the metrics
         print(len(final_output['predict']))# Get the values of the metrics
-        sys.exit(1)#print(len(final_output['predict']))# Get the values of the metrics
+        #sys.exit(1)#print(len(final_output['predict']))# Get the values of the metrics
         writer = open(str(f1)+'_1011.txt','a+',encoding='utf-8')
         for i,sample in enumerate(samples):
             writer.write(sample['raw_text']+'\t'+str(final_output['predict'][i])+'\t'+' '.join([str(v) for v in final_output['prob'][i]])+'\n')
