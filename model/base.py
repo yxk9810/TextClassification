@@ -64,7 +64,7 @@ class BaseModel(object):
         pad_id = 0
         eval_batches = data_reader.gen_mini_batches('test', inference_batch_size, pad_id, shuffle=False)
 
-        Trainer._test_sess(self,eval_batches,label_map =self.label_map,output_path=output_path,category_name='category_name' if category_name is None else category_name)
+        Trainer._test_sess(self,eval_batches)
 
     def evaluate(self,data_reader,eval_batch_size=40):
         pad_id = 0

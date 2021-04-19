@@ -179,14 +179,14 @@ class DatasetReader(object):
                     data = line.strip().split('\t')
                     if not is_test and len(data)<2:continue# = line.strip().split('\t')
                     text  = data[0]
-                    label = int(data[1]) if not is_test else 0
+                    label = int(data[-1]) if not is_test or (is_test and len(data)==2) else 0
                     import re
                     clean_title_str = re.sub(r'闪电购商品[\s\d+]{0,}', '', text.strip())
                     if len(clean_title_str) < 2: continue
                     # if len(clean_title(clean_title_str).strip())==0:continue#if len(clean_title_str) < 2: continue
                     if is_test:
-                        if len(data)<2:continue
-                        item_id = data[1]
+                        #if len(data)<2:continue
+                        item_id =0# data[1]
 
                     #valid_labels=[0,2,3,5,12,20,28,45,47,48,50,56,58,61,64,66,77,82,87,93,95,98,100,105,106,111,116,117,123,125,128,131,142,144,148,154,158,160,162,164,168,171,172,177,180,193,202,203,209,211,215,222,223,229,241,243,245,248,249,250,252,260,265,268,271,278,281,283,287,289,290,291]#label = int(data[1])
                     #if label not in valid_labels:continue #char_tokens = []
