@@ -194,9 +194,9 @@ import os
 class BertEmbedding(Layer):
     def __init__(self, BERT_PRETRAINED_DIR='/uncased_L-12_H-768_A-12/', name='bert_model_helper'):
         super(BertEmbedding, self).__init__(name)
-        CONFIG_FILE = os.path.join(BERT_PRETRAINED_DIR, 'albert_config_base.json')
+        CONFIG_FILE = os.path.join(BERT_PRETRAINED_DIR, 'bert_config.json')
         self.bert_config = modeling.BertConfig.from_json_file(CONFIG_FILE)
-        self.init_checkpoint = os.path.join(BERT_PRETRAINED_DIR, 'albert_model.ckpt')
+        self.init_checkpoint = os.path.join(BERT_PRETRAINED_DIR, 'bert_model.ckpt')
 
     def __call__(self, input_ids, input_mask, segment_ids, is_training,query_type_ids=None,use_one_hot_embeddings=True,return_pool_output=False,use_fp16=False):
         """Creates a classification model."""

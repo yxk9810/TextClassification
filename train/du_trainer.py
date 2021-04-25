@@ -12,6 +12,7 @@ import sys
 import time
 from sklearn.metrics import f1_score
 from sklearn.metrics import classification_report
+from tqdm import tqdm
 
 movie_name = set()
 # from data.elmo_data_handler import *
@@ -23,7 +24,7 @@ class Trainer(object):
     def _train_sess(model, batches, summary_writer, save_summary_steps):
         global_step = tf.train.get_or_create_global_step()
         i =0
-        for batch in batches:
+        for batch in tqdm(batches):
             i+=1
             train_batch = {}
             train_batch['token_ids'] = batch['token_ids']
@@ -292,5 +293,5 @@ class Trainer(object):
             predict_labels.append(final_output['predict'][i])
             writer.write(sample['raw_text']+'\t'+str(final_output['predict'][i])+'\t'+' '.join([str(v) for v in final_output['prob'][i]])+'\n')
         writer.close()
-        print(classification_report(labels,pred,digits=4))
+        print(classification_report(labels,predict_labels,digits=4))
         return final_output, samples

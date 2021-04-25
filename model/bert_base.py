@@ -8,7 +8,7 @@ from model.base import BaseModel
 from nn.layer import  BertEmbedding,Dropout
 from libraries import modeling
 from libraries import   optimization
-from du_train.du_trainer import Trainer
+from train.du_trainer import Trainer
 
 
 
@@ -97,13 +97,13 @@ class BertBaseline(BaseModel):
                                                       use_tpu)
 
     def train_and_evaluate(self, data_reader, evaluator, epochs=1, eposides=1,
-                           save_dir=None, summary_dir=None, save_summary_steps=10):
+                           save_dir=None, summary_dir=None, save_summary_steps=10,batch_size=32):
         if not self.initialized:
             self.bert_embedding.init_bert()
             self.session.run(tf.global_variables_initializer())
 
         Trainer._train_and_evaluate(self, data_reader, evaluator, epochs=epochs,
                                     eposides=eposides,
-                                    save_dir=save_dir, summary_dir=summary_dir, save_summary_steps=save_summary_steps)
+                                    save_dir=save_dir, summary_dir=summary_dir, save_summary_steps=save_summary_steps,batch_size=batch_size)
 
 
