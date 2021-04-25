@@ -30,3 +30,9 @@ def softmax_with_logits_label_smooth(logits,labels,label_smoothing=0.1):
             tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits,labels=smoothed_labels)
         )
 
+def softmax_with_logits_prior(logits,labels,prior=[0.9,0.1]):
+    prior = tf.constant(prior)#smoothed_labels = tf.stop_gradient(smoothed_labels)
+    logits = tf.expand_dims(prior,dim=0)+logits# = tf.constant(prior)#smoothed_labels = tf.stop_gradient(smoothed_labels)
+    return  tf.reduce_mean(
+            tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits,labels=labels)
+        )
