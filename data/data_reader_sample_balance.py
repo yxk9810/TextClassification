@@ -285,10 +285,12 @@ class DatasetReader(object):
         if shuffle:
             np.random.shuffle(indices)
         if set_name == 'train':
-            import random 
-            pos_indices =random.sample(self.train_pos_indices,batch_size//2)
-            neg_indices = random.sample(self.train_neg_indices,batch_size//2)
-            yield self._one_mini_batch(data, shuffle(pos_indices+neg_indices), pad_id)
+           for batch_start in np.arange(0, data_size, batch_size):
+               pos_indices =random.sample(self.train_pos_indices,batch_size//2)
+               neg_indices = random.sample(self.train_neg_indices,batch_size//2)
+               indices = pos_indices+neg_indices#neg_indices = random.sample(self.train_neg_indices,batch_size//2)
+               np.random.shuffle(indices)
+               yield self._one_mini_batch(data,indices, pad_id)
         else:
             for batch_start in np.arange(0, data_size, batch_size):
                 batch_indices = indices[batch_start: batch_start + batch_size]
