@@ -28,7 +28,7 @@ class Transformer(BaseModel):
         self.pos_embedding_size =12
         self.task_balance=task_balance
         self.softmax_temperature =soft_temperature
-        self.num_blocks = 3 
+        self.num_blocks = 2 
         self._build_graph()
 
     def _build_graph(self):
@@ -48,14 +48,13 @@ class Transformer(BaseModel):
 
         input_x = word_embedding(self.x)
 
-        print(tf.shape(input_x))#,masking=False))
-        input_x +=self.positional_encoding(input_x,50,masking=False)
+        input_x +=self.positional_encoding(input_x,20,masking=False)
         self.enc = input_x 
 
         for i in range(self.num_blocks):
             with tf.variable_scope("num_blocks_{}".format(i)):
                 self.enc = self.multihead_attention(queries=self.enc,keys=self.enc,num_units=256,num_heads=8)
-                self.enc = self.feedforward(self.enc,num_units=[4*256,256])
+                self.enc = self.feedforward(self.enc,num_units=[2*256,256])
         input_x = self.enc 
         print(input_x)#= self.enc 
 
@@ -67,7 +66,7 @@ class Transformer(BaseModel):
         # input_x = tf.concat([input_x,input_x_pos],axis=-1)
         # print(input_x.shape)
         dropout = Dropout(self.keep_prob)
-        merge = tf.reshape(input_x,[-1,20*256]) 
+        merge = tf.reduce_mean(input_x,axis=1) 
         # merge = tf.layers.batch_normalization(inputs=merge)
         # dense1 = tf.keras.layers.Dense(128,activation=tf.nn.tanh)
         merge = tf.layers.dense(merge,128,activation=tf.nn.tanh,name='dense1')
