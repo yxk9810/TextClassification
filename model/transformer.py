@@ -16,7 +16,7 @@ class Transformer(BaseModel):
              task_balance =1.0,
              soft_temperature=1,label_map=None
              ):
-        super(TextCNN, self).__init__(vocab,label_map)
+        super(Transformer, self).__init__(vocab,label_map)
         self.filter_sizes1 = [2, 3, 4, 5, 6]
         self.filter_nums1 = [128, 128, 64, 64, 64]
         self.keep_prob = dropout_keep_prob
@@ -32,7 +32,7 @@ class Transformer(BaseModel):
         self._build_graph()
 
     def _build_graph(self):
-        self.x = tf.placeholder(tf.int32,[None,None])
+        self.x = tf.placeholder(tf.int32,[None,20])
         self.y = tf.placeholder(tf.int32,[None])
         self.domain = tf.placeholder(tf.int32,[None])
         # self.soft_target = tf.placeholder(tf.float32,[None,None])
@@ -48,7 +48,8 @@ class Transformer(BaseModel):
 
         input_x = word_embedding(self.x)
 
-        input_x +=self.positional_encoding(input_x,masking=False)
+        print(tf.shape(input_x))#,masking=False))
+        input_x +=self.positional_encoding(input_x,50,masking=False)
         self.enc = input_x 
 
         for i in range(self.num_blocks):
@@ -56,6 +57,7 @@ class Transformer(BaseModel):
                 self.enc = self.multihead_attention(queries=self.enc,keys=self.enc,num_units=256,num_heads=8)
                 self.enc = self.feedforward(self.enc,num_units=[4*256,256])
         input_x = self.enc 
+        print(input_x)#= self.enc 
 
         #
         # feature_x = tf.one_hot(self.in_name_feature,depth=2)
@@ -65,7 +67,7 @@ class Transformer(BaseModel):
         # input_x = tf.concat([input_x,input_x_pos],axis=-1)
         # print(input_x.shape)
         dropout = Dropout(self.keep_prob)
-        merge = self.input_x 
+        merge = tf.reshape(input_x,[-1,20*256]) 
         # merge = tf.layers.batch_normalization(inputs=merge)
         # dense1 = tf.keras.layers.Dense(128,activation=tf.nn.tanh)
         merge = tf.layers.dense(merge,128,activation=tf.nn.tanh,name='dense1')
@@ -151,9 +153,9 @@ class Transformer(BaseModel):
 
         Trainer._evaluate(self, batch_generator, evaluator)
 
-    def positional_encoding(inputs,maxlen,masking=True,scope="positional_encoding"):
-        E = inputs.get_shape().as_list()[-1] # static
+    def positional_encoding(self,inputs,maxlen,masking=True,scope="positional_encoding"):
         N, T = tf.shape(inputs)[0], tf.shape(inputs)[1] # dynamic
+        E =256# tf.shape(inputs)[0], tf.shape(inputs)[1] # dynamic
         with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
             # position indices
             position_ind = tf.tile(tf.expand_dims(tf.range(T), 0), [N, 1]) # (N, T)
@@ -175,7 +177,7 @@ class Transformer(BaseModel):
             if masking:
                 outputs = tf.where(tf.equal(inputs, 0), inputs, outputs)
 
-            return tf.to_float(outputs)
+        return tf.to_float(outputs)
 
 
     def multihead_attention(self, queries,
