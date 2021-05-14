@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Short Qa Intent Test</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../static/css/bootstrap.css" rel="stylesheet">
+    <script src="../static/js/jquery-3.6.0.min.js"></script> 
+    <script src="../static/js/bootstrap.js"></script>
+
+    <!-- Custom styles for this template -->
+    <!-- <link href="../static/css/signin.css" rel="stylesheet"> -->
+
+</head>
+
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-3"></div>
+        <div align="center" class="h1 col-lg-6">Politic Intent Test</div>
+        <div class="col-lg-3"></div>
+    </div>
+    <div class="row">
+        <div class="col-lg-3">
+        </div>
+        <div class="col-lg-6">
+            <div class="input-group">
+                <input type="text" class="form-control" id="search_input" placeholder="Search for..." name="text">
+                &nbsp;&nbsp;
+                <span class="input-group-btn">
+                    <button class="btn  btn-primary" type="button" id="search" >Search</button>
+                </span>
+            </div><!-- /input-group -->
+        </div><!-- /.col-lg-6 -->
+        <div class="col-lg-3">
+        </div>
+    </div><!-- /.row -->
+    
+    <br>
+    <div class="row" >
+        <div class="col-lg-3"></div>
+        <div class="col-lg-6">
+            <h5><span id="display"></span></h5>
+        </div>
+        <div class="col-lg-3"></div>
+    </div>
+    <script>
+    
+    $(document).ready(function() {
+          $('#search').click(function(){
+            input_text = $('#search_input').val()
+            $.ajax({
+                type:'POST',
+                url:'/get_politic_intent',
+                data:{'input':input_text},
+                dataType:'json',
+                success:function(data){
+                    if(data.status==1){
+                        $('#display').html(data.message)
+                    }
+                }
+                
+
+            });
+        });
+    
+    });
+
+    </script>
+    
+    
+</div> <!-- /container -->
+
+
+</body>
+
+
+</html>

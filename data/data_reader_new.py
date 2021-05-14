@@ -236,6 +236,14 @@ class DatasetReader(object):
         print('.......count of label ..... ')
         print(counter.most_common())
         return dataset
+    def load_single_input(self,query):
+        text = query 
+        char_tokens = []
+        for token in jieba.lcut(text[:40]):
+            char_tokens.extend(list(token))
+        tokens = [token for token in list(text) if token.strip()!='']
+        sample = {'raw_text': text, 'label': 0,'item_id':0,'tokens':tokens,'char_tokens':char_tokens}
+        self.test_set = [sample]
 
     def convert_to_ids(self, vocab):
         """
